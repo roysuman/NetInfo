@@ -1,0 +1,5 @@
+{"databasePath" : "/home/suman",
+	"databaseName" : "test.db",
+	"timeIntervalInSeconds" : "120",
+        "memorySizeInKb":"250"
+}

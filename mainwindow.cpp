@@ -11,6 +11,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect( ui->pshBttnStart , SIGNAL( clicked()) , SLOT( startNetMonitor() )) ;
     connect ( ui->pshBttnStop , SIGNAL ( clicked()) ,SLOT ( stopMonitoring() ));
+    if ( !createDb (  ) ){//popup message
+	    std::cerr<<"Cant able tocreate db\n";
+    }
+    if ( !createTable( ) ){ // popup message
+	    std::cerr<<"cant ableto create tables\n";
+    }
+    
+
     int localCount = noOfInterface;
     std::cout<<noOfInterface<<"::"<<interfaceList[ 0]<<std::endl;
     while ( localCount > 0 ){
@@ -21,7 +29,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 void MainWindow::startNetMonitor(){
-    sniffingThread = boost::thread( boost::bind( &Sniffing::startSniffing, this , ui->cmbBxINterFaceList->currentText().toStdString() ) );
+
+	//start the timer
+	boost::asio::deadline_timer t(io, boost::posix_time::seconds( 60 ));
+	t.async_wait ( boost::bind ( &Sniffing::swapBufferIndex , this ,boost::asio::placeholders::error, &t ) );
+	
+	sniffingThread = boost::thread( boost::bind( &Sniffing::startSniffing, this , ui->cmbBxINterFaceList->currentText().toStdString() ) );
+       // startSniffing(ui->cmbBxINterFaceList->currentText().toStdString() );
+
+	io.run();
 
 
  //   if( startSniffing( ui->cmbBxINterFaceList->currentText().toStdString()));

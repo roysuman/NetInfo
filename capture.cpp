@@ -18,34 +18,9 @@
 
 #include"capture.hpp"
 
-_mappingIp    mappingIp;
 
+int activeBufferIndex;
 int           totalPacketCount = 0;
-/* 
-int    ahPacketCount= 0;
-int    udpPacketCpunt = 0;
-int    tcpPacketCount = 0;
-int    gmpPacketCount = 0;
-int    egpPacketCount = 0;
-int    pupPacketCount = 0;
-int    idpPacketCount = 0;
-int    dccpPacketCount= 0;
-int    grePacketCount = 0;
-int    espPacketCount = 0;
-int    pimPacketCount = 0;
-int    rawPacketCount = 0;
-int    compPacketCount = 0;
-int    sctpPacketCount = 0;
-int    ipv6PacketCount = 0;
-int    rsvpPacketCount = 0;
-int    icmpPacketCount = 0;
-int    ipipPacketCount = 0;
-int    totalPacketCount = 0;
-int    othersPacketCount = 0;
-int    beetphPacketCount = 0;
-int    udpLitePacketCount = 0;
-int    dummyTcpPacketCount = 0;
-*/
 void processPacket( u_char * , const pcap_pkthdr * ,
 			const u_char*);
 
@@ -57,7 +32,13 @@ Sniffing::Sniffing( ){
 
 	char         errorBuffer[ 100 ] ;
 	pcap_if_t    *pAlldevsp , *pDevice ;
-    noOfInterface= 0;
+	noOfInterface   = 0;
+
+	if ( !getBuffer( &activeBufferIndex ) ){
+		std::cerr<<"Not able to get buffer index during init\n";
+	} else {
+		std::cout<<"\nActive buffer INdex:"<<activeBufferIndex<<std::endl;
+		}
 
 
 	interfaceList = new char*[ MAX_DEVICE_NO ];
@@ -79,6 +60,8 @@ Sniffing::Sniffing( ){
 			strcpy( interfaceList[ noOfInterface ] , pDevice->name );
 		}
 	}
+
+
 }
 
 bool Sniffing::showInterface (  ){
@@ -151,7 +134,8 @@ void processPacket(  u_char * ucArgs ,const pcap_pkthdr *pHeader ,
 	struct sockaddr_in stDest;
 	std::string ip1 , ip2;
 	_mappingIp::iterator it ;
-	storage  value;
+	storage  value={ "" , 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,};
+
 	bool newIp;
 
 	newIp = false;
@@ -168,12 +152,14 @@ void processPacket(  u_char * ucArgs ,const pcap_pkthdr *pHeader ,
 	inet_ntop(AF_INET, &(stDest.sin_addr), s2, 100);
 	ip1.assign(s);// assign 
 	ip2.assign(s2);
-	if ( ip1 == machineIp ){
+	std::cout<<"Ip1:"<<ip1<<"ip2"<<ip2<<std::endl;
+	if ( ip1 == "0.0.0.0" && ip2=="0.0.0.0" ) return;
+	if ( ip1 == machineIp || ip1 =="127.0.0.1" || ip1 =="0.0.0.0"){
 		ip1 = ip2;//ip1 is the external ip
-		it = mappingIp.find ( ip2 );
+		it = buffStructStorage[ activeBufferIndex].mappedIp.find ( ip2 );
 	}
-	else it = mappingIp.find( ip1 );
-	if ( it == mappingIp.end() ){ // this is a new IP
+	else it = buffStructStorage[ activeBufferIndex].mappedIp.find ( ip1 );
+	if ( it == buffStructStorage[ activeBufferIndex].mappedIp.end() ){ // this is a new IP
 		newIp = true;
 	}
 	else{
@@ -190,79 +176,80 @@ void processPacket(  u_char * ucArgs ,const pcap_pkthdr *pHeader ,
 				++(value.dummyTcpPacketCount);
 				break;
 			case 1: //ICMP protocol
-				++ value.icmpPacketCount;
+				++ (value.icmpPacketCount);
 				break;
 
 				
 			case 2: // IGMP protocol
-				++ value.gmpPacketCount;
+				++ (value.gmpPacketCount );
 				break;
 			case 4:
-				++value.ipipPacketCount;
+				++(value.ipipPacketCount);
 				break;
 
 			case 6: //TCP protocol , this protocol we need to sniff for database port
-				++ value.tcpPacketCount;
+				++( value.tcpPacketCount);
 				break;
 			case 8:
-				++value.egpPacketCount;
+				++ (value.egpPacketCount );
 				break;
 			case 12:
-				++value.pupPacketCount;
+				++(value.pupPacketCount);
 				break;
 								
 			case 17: // UDP protocol
-				++value.udpPacketCpunt;
+				++(value.udpPacketCpunt);
 				break;
 			case 22:
-				++value.idpPacketCount;
+				++(value.idpPacketCount);
 				break;
 			case 33:
-				++value.dccpPacketCount;
+				++(value.dccpPacketCount);
 				break;
 			case 46:
-				++value.rsvpPacketCount;
+				++(value.rsvpPacketCount);
 				break;
 			case 47:
-				++value.grePacketCount;
+				++(value.grePacketCount);
 				break;
 			case 41:
-				++value.ipv6PacketCount;
+				++(value.ipv6PacketCount);
 				break;
 			case 50:
-				++value.espPacketCount;
+				++(value.espPacketCount);
 				break;
 			case 51:
-				++value.ahPacketCount;
+				++(value.ahPacketCount);
 				break;
 			case 94:
-				++value.beetphPacketCount;
+				++(value.beetphPacketCount);
 				break;
 			case 103:
-				++value.pimPacketCount;
+				++(value.pimPacketCount);
 				break;
 			case 108:
-				++value.compPacketCount;
+				++(value.compPacketCount);
 				break;
 			case 132:
-				++value.sctpPacketCount;
+				++(value.sctpPacketCount);
 				break;
 			case 136:
-				++value.udpLitePacketCount;
+				++(value.udpLitePacketCount);
 				break;
 			case 255:
-				++value.rawPacketCount;
+				++(value.rawPacketCount);
 				break;
 
 				
 			default: // some other protocol like ARP etc..
-				++ value.othersPacketCount;
+				++( value.othersPacketCount);
 				break;
 		}
+	std::cout<<"\nIndex:"<<activeBufferIndex<<std::endl;
 	  
-//	std::cout<<"Dummy Protocol for Tcp"<<value.dummyTcpPacketCount<<"Internet Control Message Protocol:"<<value.icmpPacketCount<<"Internet Group Management Protocol"<<value.gmpPacketCount<<"IPIP tunnel"<<value.ipipPacketCount<<"Transmission Control Protocol"<<value.tcpPacketCount<<"Exterior Gateway Protocol"<<value.egpPacketCount<<"PUP protocol"<<value.pupPacketCount<<"User Datagram Protocol(UDP)"<<value.udpPacketCpunt<<"XNS IDP Protocol"<<value.idpPacketCount<<"Datagram Congestion COntrol Protocol"<<value.dccpPacketCount<<"RSVP Protocol"<<value.rsvpPacketCount<<"Cisco GRE tunnels"<<value.grePacketCount<<"IPv6-in-IPv4 tunnelling"<<value.ipv6PacketCount<<"Encapsulation Security Payload Protocol"<<value.espPacketCount<<"Authentication Header protocol"<<value.ahPacketCount<<"IP option pseudo header for BEET"<<value.beetphPacketCount<<"Protocol Independent Multicast"<<value.pimPacketCount<<"Compression Header protocol"<<value.compPacketCount<<"Stream Control Transport Protocol"<<value.sctpPacketCount<<"UDP - Lite ( RFC 3828 )"<<value.udpLitePacketCount<<"Raw IP packets"<<value.rawPacketCount<<std::endl;
+	std::cout<<"\nDummy Protocol for Tcp"<<value.dummyTcpPacketCount<<"\nInternet Control Message Protocol:"<<value.icmpPacketCount<<"\nInternet Group Management Protocol"<<value.gmpPacketCount<<"\nIPIP tunnel"<<value.ipipPacketCount<<"\nTransmission Control Protocol"<<value.tcpPacketCount<<"\nExterior Gateway Protocol"<<value.egpPacketCount<<"\nPUP protocol"<<value.pupPacketCount<<"\nUser Datagram Protocol(UDP)"<<value.udpPacketCpunt<<"\nXNS IDP Protocol"<<value.idpPacketCount<<"\nDatagram Congestion COntrol Protocol"<<value.dccpPacketCount<<"\nRSVP Protocol"<<value.rsvpPacketCount<<"\nCisco GRE tunnels"<<value.grePacketCount<<"\nIPv6-in-IPv4 tunnelling"<<value.ipv6PacketCount<<"\nEncapsulation Security Payload Protocol"<<value.espPacketCount<<"\nAuthentication Header protocol"<<value.ahPacketCount<<"\nIP option pseudo header for BEET"<<value.beetphPacketCount<<"\nProtocol Independent Multicast"<<value.pimPacketCount<<"\nCompression Header protocol"<<value.compPacketCount<<"\nStream Control Transport Protocol"<<value.sctpPacketCount<<"\nUDP - Lite ( RFC 3828 )"<<value.udpLitePacketCount<<"\nRaw IP packets"<<value.rawPacketCount<<std::endl;
 	if( newIp ){
-		mappingIp.insert( std::pair < std::string, storage >( ip1 , value ) );
+		buffStructStorage[ activeBufferIndex ].mappedIp.insert( std::pair < std::string, storage >( ip1 , value ) );
 	}
 	
 }
@@ -288,3 +275,31 @@ void signalCallbackHandler ( int sigNum ){
 	std::cout<<"Signal received"<<sigNum<<std::endl;
 	exit ( sigNum );
 }
+
+
+
+
+void Sniffing::swapBufferIndex( const boost::system::error_code &e , boost::asio::deadline_timer *t ){
+
+	bool    getBufferFlag;
+	int     activeBufferTemp;
+
+	activeBufferTemp = activeBufferIndex;
+
+	if ( ( getBufferFlag =  getBuffer( &activeBufferIndex ) ) ){
+		std::cout<<"New interchanged buffer ID:["<<activeBufferIndex<<"]\n";
+	}
+	//now perform return buffer in a thread
+	if ( getBufferFlag ){
+		retBuffer( activeBufferTemp );
+//		boost::thread databaseOpThread = boost::thread 
+//			( boost::bind ( &buffer::BufferPool::retBuffer , 
+//					this , activeBufferTemp ) );
+//		databaseOpThread.join();
+	}
+	
+	t->expires_at( t->expires_at() +  boost::posix_time::seconds( 30 ));
+	t->async_wait ( boost::bind ( &Sniffing::swapBufferIndex , this ,boost::asio::placeholders::error, t ) );
+	
+}
+ 
